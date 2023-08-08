@@ -32,6 +32,9 @@ namespace JsonDiffer
                 case ChangeMode.Removed:
                     symbol = outMode == OutputMode.Symbol ? $"-{property}" : "removed";
                     break;
+                case ChangeMode.Same:
+                    symbol = outMode == OutputMode.Symbol ? $"@{property}" : "samed";
+                    break;
             }
 
             if (outMode == OutputMode.Detailed && diff[symbol] == null)
@@ -136,14 +139,108 @@ namespace JsonDiffer
                     if (!JToken.DeepEquals(first?[property], second?[property]))
                     {
                         var targetNode = PointTargetNode(difference, property, ChangeMode.Changed, outputMode);
+                        if (second[property] is JValue value2)
+                        {
+                            string variable = value.Value as string;
+                            string originVariable = value2.Value as string;
+                            bool isCheck = false;
+                            //added min, max routine 
+                            if (variable.Contains("~"))
+                            {
+                                var splited = variable.Split('~');
+                                if (splited.Count() == 2)
+                                {
+                                    int firstValue = 0, secondValue = 0;
+                                    var firstCheck = int.TryParse(splited[0], out firstValue);
+                                    var secondCheck = int.TryParse(splited[1], out secondValue);
+                                    if (firstCheck && secondCheck)
+                                    {
+                                        int resultValue = 0;
+                                        if (int.TryParse(originVariable, out resultValue))
+                                        {
+                                            if (firstValue <= resultValue && resultValue <= secondValue)
+                                            {
+                                                isCheck = true;
+                                            }
+                                            else;
+                                        }
+                                        else;
+                                    }
+                                    else
+                                    {
+                                        if (splited[0] == "")
+                                        {
+                                            int diffVariable = 0;
+                                            if (int.TryParse(splited[1], out diffVariable))
+                                            {
+                                                int resultValue = 0;
+                                                if (int.TryParse(originVariable, out resultValue))
+                                                {
+                                                    if (resultValue <= diffVariable)
+                                                    {
+                                                        isCheck = true;
+                                                    }
+                                                }
 
+                                            }
+                                        }
+                                        else if (splited[1] == "")
+                                        {
+                                            int diffVariable = 0;
+                                            if (int.TryParse(splited[0], out diffVariable))
+                                            {
+                                                int resultValue = 0;
+                                                if (int.TryParse(originVariable, out resultValue))
+                                                {
+                                                    if (resultValue >= diffVariable)
+                                                    {
+                                                        isCheck = true;
+                                                    }
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if( variable == originVariable )
+                                {
+                                    isCheck = true;
+                                }
+                            }
+
+                            if (isCheck == false)
+                            {
+                                targetNode = PointTargetNode(difference, property, ChangeMode.Changed, outputMode);
+                            }
+                            else
+                            {
+                                targetNode = PointTargetNode(difference, property, ChangeMode.Same, outputMode);
+                            }
+
+                            if (targetNode.Property != null)
+                            {
+                                difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? second?[property] : value;
+                            }
+                            else
+                                difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
+
+                        }
+
+
+                        //difference["changed"][property] = showOriginalValues ? second?[property] : value;
+                    }
+                    else
+                    {
+                        var targetNode = PointTargetNode(difference, property, ChangeMode.Same, outputMode);
                         if (targetNode.Property != null)
                         {
                             difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? second?[property] : value;
                         }
                         else
                             difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
-                        //difference["changed"][property] = showOriginalValues ? second?[property] : value;
                     }
 
                     continue;
