@@ -175,3 +175,27 @@ Given the same json samples:
   }
 }
 ```
+
+### Min Max function added 
+
+```
+first variable ( integer ) ~ second variable ( integer )
+```
+
+### same field added 
+
+#### first, second input data
+```json
+{ 
+ "test1": 1,
+ "test2": 2
+}
+```
+
+#### Output json 
+```JSON
+{
+	"@test1": 1,
+	"@test2": 2
+}
+```
