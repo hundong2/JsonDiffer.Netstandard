@@ -305,11 +305,20 @@ namespace JsonDiffer
                         else
                             difference[targetNode.Symbol] = difrences;
                     }
+                    else
+                    {
+                        targetNode = PointTargetNode(difference, property, ChangeMode.Same, outputMode);
+                        if(second?[property] != null )
+                        {
+                            difference[targetNode.Symbol] = second?[property];
+                        }
+                    }
 
                     continue;
                 }
             }
 
+            
             return difference;
         }
 
