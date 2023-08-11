@@ -134,18 +134,18 @@ namespace JsonDiffer
                     continue;
                 }
 
-                if (first?[property] is JValue value)
+                if (first?[property] is JValue value && value.Value != string.Empty)
                 {
                     if (!JToken.DeepEquals(first?[property], second?[property]))
                     {
                         var targetNode = PointTargetNode(difference, property, ChangeMode.Changed, outputMode);
                         if (second[property] is JValue value2)
                         {
-                            string variable = value.Value as string;
-                            string originVariable = value2.Value as string;
+                            string variable = value.Value.ToString();
+                            string originVariable = value2.Value.ToString();
                             bool isCheck = false;
                             //added min, max routine 
-                            if (variable.Contains("~"))
+                            if (variable != null && variable.Contains("~"))
                             {
                                 var splited = variable.Split('~');
                                 if (splited.Count() == 2)
