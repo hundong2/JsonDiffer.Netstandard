@@ -46,6 +46,39 @@ namespace JsonDiffer
 
         }
 
+        /// <summary>
+        /// DiffCheck of Json Object from JToken 
+        /// </summary>
+        /// <param name="first"></param>
+        /// <returns>true : changed something, false : not changed</returns>
+        public static bool DiffCheckJToken( JToken first )
+        {
+            var valueTemp = first as JObject;
+            foreach( var element in first as JObject )
+            {
+                if (element.Key.Contains("-"))
+                {
+                    return true;
+                }
+            }
+            foreach( var item in first.First )
+            {
+                var temp = item.First as JProperty;
+                if ( temp != null )
+                {
+                    if( temp.Name.Contains(SignInformation.Changed) || temp.Name.Contains(SignInformation.Removed) )
+                    {
+                        //changed value
+                        return true;
+                    }
+                    else
+                    {
+                        //not changed 
+                    }
+                }
+            }
+            return false;
+        }
         public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false)
         {
             if (JToken.DeepEquals(first, second)) return null;
