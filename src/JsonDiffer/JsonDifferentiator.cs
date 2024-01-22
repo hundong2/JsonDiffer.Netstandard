@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace JsonDiffer
@@ -47,38 +48,39 @@ namespace JsonDiffer
         }
 
         /// <summary>
-        /// DiffCheck of Json Object from JToken 
+        /// Diff check from all json keys 
         /// </summary>
         /// <param name="first"></param>
-        /// <returns>true : changed something, false : not changed</returns>
-        public static bool DiffCheckJToken( JToken first )
+        /// <returns></returns>
+        public static bool DiffCheckJToken2(JToken first)
         {
-            var valueTemp = first as JObject;
-            foreach( var element in first as JObject )
+            var propertyNames = (first?.Children() ?? default).Select(_ => (_ as JProperty)?.Name)?.Distinct();
+            foreach (JProperty jProperty in (first as JObject).Properties())
             {
-                if (element.Key.Contains("-"))
+                string key = jProperty.Name;
+                JToken valueToken = jProperty.Value;
+
+                if(valueToken is JObject )
                 {
-                    return true;
+                    var diffcheck = DiffCheckJToken2(valueToken);
+                    if (diffcheck)
+                        return diffcheck;
+                    else;
                 }
-            }
-            foreach( var item in first.First )
-            {
-                var temp = item.First as JProperty;
-                if ( temp != null )
+                if (valueToken is JValue jValue)
                 {
-                    if( temp.Name.Contains(SignInformation.Changed) || temp.Name.Contains(SignInformation.Removed) )
+                    bool hasPlusSign = key.StartsWith("*");
+                    bool hasAtSign = key.StartsWith("-");
+
+                    if (hasPlusSign || hasAtSign)
                     {
-                        //changed value
                         return true;
-                    }
-                    else
-                    {
-                        //not changed 
                     }
                 }
             }
             return false;
         }
+
         public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false)
         {
             if (JToken.DeepEquals(first, second)) return null;
