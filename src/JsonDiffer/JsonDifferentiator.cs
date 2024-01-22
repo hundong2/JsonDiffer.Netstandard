@@ -54,30 +54,78 @@ namespace JsonDiffer
         /// <returns></returns>
         public static bool DiffCheckJToken2(JToken first)
         {
-            var propertyNames = (first?.Children() ?? default).Select(_ => (_ as JProperty)?.Name)?.Distinct();
-            foreach (JProperty jProperty in (first as JObject).Properties())
+            
+
+            try
             {
-                string key = jProperty.Name;
-                JToken valueToken = jProperty.Value;
-
-                if(valueToken is JObject )
+                if (first is JArray)
                 {
-                    var diffcheck = DiffCheckJToken2(valueToken);
-                    if (diffcheck)
-                        return diffcheck;
-                    else;
-                }
-                if (valueToken is JValue jValue)
-                {
-                    bool hasPlusSign = key.StartsWith("*");
-                    bool hasAtSign = key.StartsWith("-");
-
-                    if (hasPlusSign || hasAtSign)
+                    foreach (var jProperty in first)
                     {
-                        return true;
+                        var diffcheck = DiffCheckJToken2(jProperty);
+
+                        if (diffcheck)
+                            return diffcheck;
+                        else;
+                    }
+                }
+                else
+                {
+                    //var propertyNames = (first?.Children() ?? default).Select(_ => (_ as JProperty)?.Name)?.Distinct();
+                    foreach (JProperty jProperty in first)
+                    {
+                        string key = jProperty.Name;
+                        JToken valueToken = jProperty.Value;
+                        if (key.StartsWith("-"))
+                        {
+                            return true;
+                        }
+                        else;
+                        if (valueToken is JObject)
+                        {
+                            foreach (var obj in valueToken)
+                            {
+
+                                if (obj is JProperty && obj.First is JValue)
+                                {
+                                    bool hasPlusSign = (obj as JProperty).Name.StartsWith("*");
+                                    bool hasAtSign = (obj as JProperty).Name.StartsWith("-");
+
+                                    if (hasPlusSign || hasAtSign)
+                                    {
+                                        return true;
+                                    }
+                                }
+                                else
+                                {
+                                    var diffcheck = DiffCheckJToken2(obj.First);
+                                    if (diffcheck)
+                                        return diffcheck;
+                                    else;
+                                }
+
+                            }
+
+                        }
+                        if (valueToken is JValue jValue)
+                        {
+                            bool hasPlusSign = key.StartsWith("*");
+                            bool hasAtSign = key.StartsWith("-");
+
+                            if (hasPlusSign || hasAtSign)
+                            {
+                                return true;
+                            }
+                        }
+
                     }
                 }
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
             return false;
         }
 
