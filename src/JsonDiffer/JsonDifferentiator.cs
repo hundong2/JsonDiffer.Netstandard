@@ -54,8 +54,6 @@ namespace JsonDiffer
         /// <returns></returns>
         public static bool DiffCheckJToken2(JToken first)
         {
-            
-
             try
             {
                 if (first is JArray)
