@@ -77,7 +77,7 @@ namespace JsonDiffer
                 Console.WriteLine(ex.ToString());
             }
         }
-        public void CheckRangeFromFilePath(string path, string output)
+        public void CheckRangeFromFilePath(string path, string output, List<string> rangeresult = null)
         {
             using (StreamReader file = File.OpenText(path))
             {
@@ -85,23 +85,27 @@ namespace JsonDiffer
                 var jobj = serializer.Deserialize(file, typeof(JObject));
                 if(jobj != null )
                 {
-                    CheckRange(jobj as JObject);
+                    CheckRange(jobj as JObject, rangeresult);
                 }
                 File.WriteAllText(output, jobj.ToString());
             }
         }
-        public void CheckRange(JToken obj)
+        public void CheckRange(JToken obj, List<string> rangeresult = null)
         {
             try
             {
                 if (obj != null)
                 {
+                    if(obj.Path == "body.ResData3[0].StartPosInfo.PosInOpt")
+                    {
+
+                    }
                     if( obj is JObject || obj is JArray || obj is JProperty )
                     {
                         foreach( var element in obj )
                         {
                             //CheckRange(element.Value as JObject);
-                            CheckRange(element);
+                            CheckRange(element, rangeresult);
                         }
                     }
                     else
@@ -130,8 +134,15 @@ namespace JsonDiffer
                                                 x.CheckResultValue = SQLiteDifferModel.constVariable.StatusFail;
                                             }
                                             (obj as JValue).Value = $@"[{x.CheckResultValue}] {obj.ToString()} ({x.MinValue}~{x.MaxValue})";
+                                            if (rangeresult != null)
+                                            {
+                                                rangeresult.Add($@"{obj.Path.ToString()} : {(obj as JValue).Value.ToString()}");
+                                            }
+                                            else;
                                         }
-                                        else;
+                                        else
+                                        {
+                                        }
                                     }
                                     else;
                                     //Other check
