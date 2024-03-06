@@ -369,7 +369,7 @@ namespace JsonDiffer
                         else
                             difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
                     }
-                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.First, ref diffelement);
+                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.Last, ref diffelement);
                    
                     continue;
                 }
