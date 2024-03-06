@@ -126,8 +126,54 @@ namespace JsonDiffer
 
             return false;
         }
-
-        public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false)
+        /// <summary>
+        /// Note Result Generate
+        /// </summary>
+        /// <param name="property">json key property</param>
+        /// <param name="first">expect information</param>
+        /// <param name="second">output information</param>
+        /// <param name="difference">difference information</param>
+        /// <param name="diffelement">result information save list</param>
+        public static void NoteResult(string property, JValue first, JValue second, JToken difference, ref List<string> diffelement)
+        {
+            if (first != null)
+            {
+                string checkElement = "NONE";
+                string diffreusltInfo = string.Empty;
+                if (second != null)
+                {
+                    checkElement = second.Value.ToString();
+                }
+                else;
+                if (difference != null)
+                {
+                    diffreusltInfo = (difference as JProperty).Name;
+                }
+                else;
+                string generate = $@"{first.Path} ({first.Value} <-> {checkElement})";
+                if (diffreusltInfo.Contains("@"))
+                {
+                    generate = "same value(@): " + generate;
+                }
+                else if (diffreusltInfo.Contains("*"))
+                {
+                    generate = "diff value(*): " + generate;
+                }
+                else if (diffreusltInfo.Contains("-"))
+                {
+                    generate = "not contained value(-): " + generate;
+                }
+                else
+                {
+                    generate = string.Empty;
+                }
+                if (generate != string.Empty)
+                {
+                    diffelement.Add(generate);
+                }
+            }
+        }
+        public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false, List<string> diffelement = null)
         {
             if (JToken.DeepEquals(first, second)) return null;
 
@@ -162,7 +208,7 @@ namespace JsonDiffer
                             var firstsItem = first?.ElementAtOrDefault(i);
                             var secondsItem = second?.ElementAtOrDefault(i);
 
-                            var diff = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues);
+                            var diff = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues, diffelement);
 
                             if (diff != null)
                             {
@@ -211,7 +257,7 @@ namespace JsonDiffer
                     }
                     else
                         difference[targetNode.Symbol] = firstVal.Value;
-
+                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.Last, ref diffelement);
                     continue;
                 }
 
@@ -323,7 +369,8 @@ namespace JsonDiffer
                         else
                             difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
                     }
-
+                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.First, ref diffelement);
+                   
                     continue;
                 }
 
@@ -337,7 +384,7 @@ namespace JsonDiffer
                     var firstsItem = first[property];
                     var secondsItem = second[property];
 
-                    var diffrence = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues);
+                    var diffrence = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues,diffelement);
 
                     if (diffrence != null)
                     {
@@ -369,7 +416,7 @@ namespace JsonDiffer
                         var firstsItem = first[property]?.ElementAtOrDefault(i);
                         var secondsItem = second[property]?.ElementAtOrDefault(i);
 
-                        var diff = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues);
+                        var diff = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues, diffelement);
 
                         if (diff != null)
                         {
@@ -398,8 +445,6 @@ namespace JsonDiffer
                     continue;
                 }
             }
-
-            
             return difference;
         }
 
