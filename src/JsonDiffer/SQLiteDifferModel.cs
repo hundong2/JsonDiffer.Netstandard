@@ -96,13 +96,13 @@ namespace JsonDiffer
             {
                 if (obj != null)
                 {
-                    if(obj.Path == "body.ResData3[0].StartPosInfo.PosInOpt")
+                    if (obj.Path == "body.ResData3[0].StartPosInfo.PosInOpt")
                     {
 
                     }
-                    if( obj is JObject || obj is JArray || obj is JProperty )
+                    if (obj is JObject || obj is JArray || obj is JProperty)
                     {
-                        foreach( var element in obj )
+                        foreach (var element in obj)
                         {
                             //CheckRange(element.Value as JObject);
                             CheckRange(element, rangeresult);
@@ -138,23 +138,26 @@ namespace JsonDiffer
                                             {
                                                 rangeresult.Add($@"{obj.Path.ToString()} : {(obj as JValue).Value.ToString()}");
                                             }
-                                            else;
+                                            else { }
                                         }
                                         else
                                         {
                                         }
                                     }
-                                    else;
+                                    else
+                                    {
+
+                                    }
                                     //Other check
-                                    
+
                                 }
-                                else;
+                                else { }
                             });
                         }
-                        else;
+                        else { }
                     }
                 }
-                else;
+                else { }
             }
             catch(Exception ex)
             {

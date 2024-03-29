@@ -64,7 +64,7 @@ namespace JsonDiffer
 
                         if (diffcheck)
                             return diffcheck;
-                        else;
+                        else { }
                     }
                 }
                 else
@@ -78,7 +78,7 @@ namespace JsonDiffer
                         {
                             return true;
                         }
-                        else;
+                        else { }
                         if (valueToken is JObject)
                         {
                             foreach (var obj in valueToken)
@@ -99,7 +99,10 @@ namespace JsonDiffer
                                     var diffcheck = DiffCheckJToken2(obj.First);
                                     if (diffcheck)
                                         return diffcheck;
-                                    else;
+                                    else
+                                    {
+
+                                    }
                                 }
 
                             }
@@ -144,12 +147,14 @@ namespace JsonDiffer
                 {
                     checkElement = second.Value.ToString();
                 }
-                else;
+                else
+                { }
                 if (difference != null)
                 {
                     diffreusltInfo = (difference as JProperty).Name;
                 }
-                else;
+                else
+                { }
                 string generate = $@"{first.Path} ({first.Value} <-> {checkElement})";
                 if (diffreusltInfo.Contains("@"))
                 {
@@ -171,6 +176,8 @@ namespace JsonDiffer
                 {
                     diffelement.Add(generate);
                 }
+                else
+                { }
             }
         }
         public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false, List<string> diffelement = null)
@@ -261,7 +268,7 @@ namespace JsonDiffer
                     continue;
                 }
 
-                if (first?[property] is JValue value && value.Value != string.Empty)
+                if (first?[property] is JValue value && value.Value as string != string.Empty)
                 {
                     if (!JToken.DeepEquals(first?[property], second?[property]))
                     {
@@ -289,9 +296,13 @@ namespace JsonDiffer
                                             {
                                                 isCheck = true;
                                             }
-                                            else;
+                                            else
+                                            {
+
+                                            }
                                         }
-                                        else;
+                                        else
+                                        { }
                                     }
                                     else
                                     {
