@@ -139,7 +139,7 @@ namespace JsonDiffer
         /// <param name="diffelement">result information save list</param>
         public static void NoteResult(string property, JValue first, JValue second, JToken difference, ref List<string> diffelement)
         {
-            if (first != null)
+            if (first != null && diffelement != null)
             {
                 string checkElement = "NONE";
                 string diffreusltInfo = string.Empty;
