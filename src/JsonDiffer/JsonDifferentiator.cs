@@ -7,6 +7,9 @@ namespace JsonDiffer
 {
     public class JsonDifferentiator
     {
+        static string sameValue = "same value(@): ";
+        static string diffValue = "diff value(*): ";
+        static string notContainValue = "not contained value(-): ";
         public OutputMode OutputMode { get; private set; }
         public bool ShowOriginalValues { get; private set; }
 
@@ -46,7 +49,95 @@ namespace JsonDiffer
             return new TargetNode(symbol, (outMode == OutputMode.Symbol) ? null : property);
 
         }
+        /// <summary>
+        /// Diff check from all json keys 
+        /// </summary>
+        /// <param name="first"></param>
+        /// <returns></returns>
+        public static void DiffCheckJToken3(JToken first, ref List<string> element, bool flag = false)
+        {
+            try
+            {
+                if (first is JArray)
+                {
+                    foreach (var jProperty in first)
+                    {
+                        DiffCheckJToken3(jProperty, ref element, flag: flag);
+                    }
+                }
+                else
+                {
+                    //var propertyNames = (first?.Children() ?? default).Select(_ => (_ as JProperty)?.Name)?.Distinct();
+                    foreach (JProperty jProperty in first)
+                    {
+                        string key = jProperty.Name;
+                        JToken valueToken = jProperty.Value;
+                        if (key.StartsWith("-"))
+                        {
+                            element.Add($"{notContainValue}{jProperty.Path}");
+                        }
+                        else { }
+                        if (valueToken is JObject)
+                        {
+                            foreach (var obj in valueToken)
+                            {
 
+                                if (obj is JProperty && obj.First is JValue)
+                                {
+                                    bool hasPlusSign = (obj as JProperty).Name.StartsWith("*");
+                                    bool hasAtSign = (obj as JProperty).Name.StartsWith("-");
+
+                                    if (hasPlusSign || hasAtSign)
+                                    {
+                                        string check = $"{notContainValue}";
+                                        if (hasPlusSign)
+                                            check = $"{diffValue}";
+                                        element.Add($"{check}{(obj as JProperty).Name}");
+                                    }
+                                }
+                                else
+                                {
+                                    bool checkflag = false;
+                                    if ( obj is JProperty )
+                                    {
+                                        bool hasAtSign = (obj as JProperty).Name.StartsWith("-");
+                                        
+                                        if ( hasAtSign)
+                                        {
+                                            element.Add($"{notContainValue}{(obj as JProperty).Name}");
+                                            checkflag = true;
+                                        }
+                                        
+                                    }
+                                    DiffCheckJToken3(obj.First, ref element, flag: checkflag);
+                                }
+
+                            }
+
+                        }
+                        if (valueToken is JValue jValue)
+                        {
+                            bool hasPlusSign = key.StartsWith("*");
+                            bool hasAtSign = key.StartsWith("-");
+
+                            if (hasPlusSign || hasAtSign || flag)
+                            {
+                                string check = $"{notContainValue}";
+                                if( hasPlusSign )
+                                    check = $"{diffValue}";
+
+                                element.Add($"{check}{key}:{valueToken}");
+                            }
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
         /// <summary>
         /// Diff check from all json keys 
         /// </summary>
@@ -158,15 +249,15 @@ namespace JsonDiffer
                 string generate = $@"{first.Path} ({first.Value} <-> {checkElement})";
                 if (diffreusltInfo.Contains("@"))
                 {
-                    generate = "same value(@): " + generate;
+                    generate = $"{sameValue}" + generate;
                 }
                 else if (diffreusltInfo.Contains("*"))
                 {
-                    generate = "diff value(*): " + generate;
+                    generate = $"{diffValue}" + generate;
                 }
                 else if (diffreusltInfo.Contains("-"))
                 {
-                    generate = "not contained value(-): " + generate;
+                    generate = $"{notContainValue}" + generate;
                 }
                 else
                 {
@@ -366,8 +457,6 @@ namespace JsonDiffer
                                 difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
 
                         }
-
-
                         //difference["changed"][property] = showOriginalValues ? second?[property] : value;
                     }
                     else
