@@ -1,7 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 
 namespace JsonDiffer
 {
@@ -117,6 +121,7 @@ namespace JsonDiffer
                         }
                         if (valueToken is JValue jValue)
                         {
+                            /*
                             bool hasPlusSign = key.StartsWith("*");
                             bool hasAtSign = key.StartsWith("-");
 
@@ -128,6 +133,7 @@ namespace JsonDiffer
 
                                 element.Add($"{check}{key}:{valueToken}");
                             }
+                            */
                         }
 
                     }
@@ -234,9 +240,11 @@ namespace JsonDiffer
             {
                 string checkElement = "NONE";
                 string diffreusltInfo = string.Empty;
+                string secondValue = "";
                 if (second != null)
                 {
                     checkElement = second.Value.ToString();
+                    secondValue = second.Path;
                 }
                 else
                 { }
@@ -246,7 +254,7 @@ namespace JsonDiffer
                 }
                 else
                 { }
-                string generate = $@"{first.Path} ({first.Value} <-> {checkElement})";
+                string generate = $@"{first.Path},{secondValue} ({first.Value} <-> {checkElement})";
                 if (diffreusltInfo.Contains("@"))
                 {
                     generate = $"{sameValue}" + generate;
@@ -271,9 +279,69 @@ namespace JsonDiffer
                 { }
             }
         }
+        public static bool CustomDeepEquals(JToken value1, JToken value2)
+        {
+            bool resultValue = false;
+            try
+            {
+                resultValue = JToken.DeepEquals(value1, value2);
+                if (resultValue != true)
+                {
+
+                }
+            }
+            catch(Exception ex)
+            {
+                //Trace.WriteLine(ex.ToString());
+            }
+            return resultValue;
+        }
+        public static bool IsMatch(string input, string pattern)
+        {
+            try
+            {
+                // Escape the pattern for regular expressions
+                pattern = pattern.Replace("#", "*");
+                pattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+
+                // Use Regex to match the input string with the pattern
+                return Regex.IsMatch(input, pattern);
+            }
+            catch(Exception ex)
+            {
+                //Trace.WriteLine(ex.ToString());
+            }
+            return false;
+        }
+        public static JToken GetValue(JToken value, string Property)
+        {
+            if( value != null )
+            {
+                if (value[Property] != null )
+                {
+                    return value[Property];
+                }
+                else
+                {
+                    foreach (JProperty element in value)
+                    {
+                        if (element != null)
+                        {
+                            if (IsMatch( element.Name, Property))
+                            {
+                                return value[element.Name];
+                            }
+                        }
+
+                    }
+                }
+
+            }
+            return null;
+        }
         public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false, List<string> diffelement = null)
         {
-            if (JToken.DeepEquals(first, second)) return null;
+            if (CustomDeepEquals(first, second)) return null;
 
             if (first != null && second != null && first?.GetType() != second?.GetType())
                 throw new InvalidOperationException($"Operands' types must match; '{first.GetType().Name}' <> '{second.GetType().Name}'");
@@ -327,9 +395,9 @@ namespace JsonDiffer
                     continue;
                 }
 
-                if (first?[property] == null)
+                if ( GetValue(first, property) == null) //first?[property] == null ||
                 {
-                    var secondVal = second?[property]?.Parent as JProperty;
+                    var secondVal = GetValue(second, property).Parent as JProperty;
 
                     var targetNode = PointTargetNode(difference, property, ChangeMode.Added, outputMode);
 
@@ -343,9 +411,9 @@ namespace JsonDiffer
                     continue;
                 }
 
-                if (second?[property] == null)
+                if ( GetValue(second, property) == null )
                 {
-                    var firstVal = first?[property]?.Parent as JProperty;
+                    var firstVal = GetValue(first, property).Parent as JProperty;
 
                     var targetNode = PointTargetNode(difference, property, ChangeMode.Removed, outputMode);
 
@@ -355,16 +423,16 @@ namespace JsonDiffer
                     }
                     else
                         difference[targetNode.Symbol] = firstVal.Value;
-                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.Last, ref diffelement);
+                    NoteResult(property, GetValue(first, property) as JValue, GetValue(second, property) as JValue, difference.Last, ref diffelement);
                     continue;
                 }
 
-                if (first?[property] is JValue value && value.Value as string != string.Empty)
+                if (  GetValue(first, property) is JValue value && value.Value as string != string.Empty)
                 {
-                    if (!JToken.DeepEquals(first?[property], second?[property]))
+                    if (!CustomDeepEquals(GetValue(first, property), GetValue(second, property)))
                     {
                         var targetNode = PointTargetNode(difference, property, ChangeMode.Changed, outputMode);
-                        if (second[property] is JValue value2)
+                        if (GetValue(second, property) is JValue value2)
                         {
                             string variable = value.Value.ToString();
                             string originVariable = value2.Value.ToString();
@@ -432,6 +500,42 @@ namespace JsonDiffer
                                     }
                                 }
                             }
+                            else if( variable != null && variable.Contains("c,"))
+                            {
+                                var split = variable.Split(',');
+                                if( split.Count() > 1 )
+                                {
+                                    int countNumber = 0;
+                                    if(int.TryParse(split[1], out countNumber))
+                                    {
+                                        if(originVariable != null &&  originVariable.Length == countNumber )
+                                        {
+                                            isCheck = true;
+                                        }
+                                    }
+                                }
+                            }
+                            else if ( variable != null && variable.Contains("d,"))
+                            {
+
+                                DateTime tempDate;
+                                if(originVariable != null && DateTime.TryParseExact(originVariable, "yyyyMMddHHmmss", new CultureInfo("ko-KR"), DateTimeStyles.None, out tempDate))
+                                {
+                                    isCheck = true;
+                                }
+                                
+                            }
+                            else if( variable != null && variable.Contains("w,"))
+                            {
+                                var split = variable.Split(',');
+                                if (split.Count() > 1)
+                                {
+                                    if(IsMatch(originVariable, split[1]))
+                                    {
+                                        isCheck = true;
+                                    }
+                                }
+                            }
                             else
                             {
                                 if( variable == originVariable )
@@ -451,10 +555,10 @@ namespace JsonDiffer
 
                             if (targetNode.Property != null)
                             {
-                                difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? second?[property] : value;
+                                difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? GetValue(second, property) : value;
                             }
                             else
-                                difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
+                                difference[targetNode.Symbol] = showOriginalValues ? GetValue(second, property) : value;
 
                         }
                         //difference["changed"][property] = showOriginalValues ? second?[property] : value;
@@ -464,12 +568,12 @@ namespace JsonDiffer
                         var targetNode = PointTargetNode(difference, property, ChangeMode.Same, outputMode);
                         if (targetNode.Property != null)
                         {
-                            difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? second?[property] : value;
+                            difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? GetValue(second, property) : value;
                         }
                         else
-                            difference[targetNode.Symbol] = showOriginalValues ? second?[property] : value;
+                            difference[targetNode.Symbol] = showOriginalValues ? GetValue(second, property) : value;
                     }
-                    NoteResult(property, first?[property] as JValue, second?[property] as JValue, difference.Last, ref diffelement);
+                    NoteResult(property, GetValue(first, property) as JValue, GetValue(second, property)  as JValue, difference.Last, ref diffelement);
                    
                     continue;
                 }
