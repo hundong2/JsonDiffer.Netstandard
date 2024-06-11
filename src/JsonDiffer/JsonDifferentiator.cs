@@ -339,6 +339,129 @@ namespace JsonDiffer
             }
             return null;
         }
+        public static bool conditionalCheck(string variable, string originVariable)
+        {
+            bool isCheck = false;
+            if (variable != null && variable.Contains("~"))
+            {
+                var splited = variable.Split('~');
+                if (splited.Count() == 2)
+                {
+                    int firstValue = 0, secondValue = 0;
+                    var firstCheck = int.TryParse(splited[0], out firstValue);
+                    var secondCheck = int.TryParse(splited[1], out secondValue);
+                    if (firstCheck && secondCheck)
+                    {
+                        int resultValue = 0;
+                        if (int.TryParse(originVariable, out resultValue))
+                        {
+                            if (firstValue <= resultValue && resultValue <= secondValue)
+                            {
+                                isCheck = true;
+                            }
+                            else
+                            {
+
+                            }
+                        }
+                        else
+                        { }
+                    }
+                    else
+                    {
+                        if (splited[0] == "")
+                        {
+                            int diffVariable = 0;
+                            if (int.TryParse(splited[1], out diffVariable))
+                            {
+                                int resultValue = 0;
+                                if (int.TryParse(originVariable, out resultValue))
+                                {
+                                    if (resultValue <= diffVariable)
+                                    {
+                                        isCheck = true;
+                                    }
+                                }
+
+                            }
+                        }
+                        else if (splited[1] == "")
+                        {
+                            int diffVariable = 0;
+                            if (int.TryParse(splited[0], out diffVariable))
+                            {
+                                int resultValue = 0;
+                                if (int.TryParse(originVariable, out resultValue))
+                                {
+                                    if (resultValue >= diffVariable)
+                                    {
+                                        isCheck = true;
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+            else if (variable != null && variable.StartsWith("c,"))
+            {
+                var split = variable.Split(',');
+                if (split.Count() > 1)
+                {
+                    int countNumber = 0;
+                    if (int.TryParse(split[1], out countNumber))
+                    {
+                        if (originVariable != null && originVariable.Length == countNumber)
+                        {
+                            isCheck = true;
+                        }
+                    }
+                }
+            }
+            else if (variable != null && variable.StartsWith("d,"))
+            {
+
+                DateTime tempDate;
+                if (originVariable != null && DateTime.TryParseExact(originVariable, "yyyyMMddHHmmss", new CultureInfo("ko-KR"), DateTimeStyles.None, out tempDate))
+                {
+                    isCheck = true;
+                }
+
+            }
+            else if (variable != null && variable.StartsWith("w,")) //regex check
+            {
+                var split = variable.Split(',');
+                if (split.Count() > 1)
+                {
+                    if (IsMatch(originVariable, split[1]))
+                    {
+                        isCheck = true;
+                    }
+                }
+            }
+            else if (variable != null && variable.StartsWith("m,"))
+            {
+                var split = variable.Replace("m,", "").Trim().Split('/');
+                if (split.Count() > 0)
+                {
+                    foreach (var element in split)
+                    {
+                        isCheck = conditionalCheck(element, originVariable);
+                        if (isCheck)
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                if (variable == originVariable)
+                {
+                    isCheck = true;
+                }
+            }
+            return isCheck;
+        }
         public static JToken Differentiate(JToken first, JToken second, OutputMode outputMode = OutputMode.Symbol, bool showOriginalValues = false, List<string> diffelement = null)
         {
             if (CustomDeepEquals(first, second)) return null;
@@ -436,113 +559,7 @@ namespace JsonDiffer
                         {
                             string variable = value.Value.ToString();
                             string originVariable = value2.Value.ToString();
-                            bool isCheck = false;
-                            //added min, max routine 
-                            if (variable != null && variable.Contains("~"))
-                            {
-                                var splited = variable.Split('~');
-                                if (splited.Count() == 2)
-                                {
-                                    int firstValue = 0, secondValue = 0;
-                                    var firstCheck = int.TryParse(splited[0], out firstValue);
-                                    var secondCheck = int.TryParse(splited[1], out secondValue);
-                                    if (firstCheck && secondCheck)
-                                    {
-                                        int resultValue = 0;
-                                        if (int.TryParse(originVariable, out resultValue))
-                                        {
-                                            if (firstValue <= resultValue && resultValue <= secondValue)
-                                            {
-                                                isCheck = true;
-                                            }
-                                            else
-                                            {
-
-                                            }
-                                        }
-                                        else
-                                        { }
-                                    }
-                                    else
-                                    {
-                                        if (splited[0] == "")
-                                        {
-                                            int diffVariable = 0;
-                                            if (int.TryParse(splited[1], out diffVariable))
-                                            {
-                                                int resultValue = 0;
-                                                if (int.TryParse(originVariable, out resultValue))
-                                                {
-                                                    if (resultValue <= diffVariable)
-                                                    {
-                                                        isCheck = true;
-                                                    }
-                                                }
-
-                                            }
-                                        }
-                                        else if (splited[1] == "")
-                                        {
-                                            int diffVariable = 0;
-                                            if (int.TryParse(splited[0], out diffVariable))
-                                            {
-                                                int resultValue = 0;
-                                                if (int.TryParse(originVariable, out resultValue))
-                                                {
-                                                    if (resultValue >= diffVariable)
-                                                    {
-                                                        isCheck = true;
-                                                    }
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            else if( variable != null && variable.Contains("c,"))
-                            {
-                                var split = variable.Split(',');
-                                if( split.Count() > 1 )
-                                {
-                                    int countNumber = 0;
-                                    if(int.TryParse(split[1], out countNumber))
-                                    {
-                                        if(originVariable != null &&  originVariable.Length == countNumber )
-                                        {
-                                            isCheck = true;
-                                        }
-                                    }
-                                }
-                            }
-                            else if ( variable != null && variable.Contains("d,"))
-                            {
-
-                                DateTime tempDate;
-                                if(originVariable != null && DateTime.TryParseExact(originVariable, "yyyyMMddHHmmss", new CultureInfo("ko-KR"), DateTimeStyles.None, out tempDate))
-                                {
-                                    isCheck = true;
-                                }
-                                
-                            }
-                            else if( variable != null && variable.Contains("w,"))
-                            {
-                                var split = variable.Split(',');
-                                if (split.Count() > 1)
-                                {
-                                    if(IsMatch(originVariable, split[1]))
-                                    {
-                                        isCheck = true;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if( variable == originVariable )
-                                {
-                                    isCheck = true;
-                                }
-                            }
+                            bool isCheck = conditionalCheck(variable, originVariable);
 
                             if (isCheck == false)
                             {
