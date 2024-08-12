@@ -82,10 +82,10 @@ namespace JsonDiffer
             using (StreamReader file = File.OpenText(path))
             {
                 JsonSerializer serializer = new JsonSerializer();
-                var jobj = serializer.Deserialize(file, typeof(JObject));
+                var jobj = serializer.Deserialize(file, typeof(JToken));
                 if(jobj != null )
                 {
-                    CheckRange(jobj as JObject, rangeresult);
+                    CheckRange(jobj as JToken, rangeresult);
                 }
                 File.WriteAllText(output, jobj.ToString());
             }
