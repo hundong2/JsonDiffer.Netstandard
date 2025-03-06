@@ -226,6 +226,29 @@ namespace JsonDiffer
 
             return false;
         }
+        public static void NoteResult(string property, JObject jobj, JToken differnce, ref List<string> diffelement)
+        {
+            try
+            {
+                if( jobj != null && diffelement != null )
+                {
+                    string diffresultInfo = string.Empty;
+                    if( differnce != null )
+                    {
+                        diffresultInfo = (differnce as JProperty).Name;
+                    }
+                    string generate = $@"{sameValue}: {jobj.Path}<br>{jobj.ToString()}";
+                    if( string.IsNullOrEmpty(generate) == false )
+                    {
+                        diffelement.Add(generate);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
         /// <summary>
         /// Note Result Generate
         /// </summary>
@@ -604,7 +627,7 @@ namespace JsonDiffer
 
                     var firstsItem = first[property];
                     var secondsItem = second[property];
-
+                    
                     var diffrence = Differentiate(firstsItem, secondsItem, outputMode, showOriginalValues,diffelement);
 
                     if (diffrence != null)
@@ -618,8 +641,20 @@ namespace JsonDiffer
                             difference[targetNode.Symbol] = diffrence;
 
                     }
+                    else
+                    {
+                        //null means is same object 
+                        targetNode = PointTargetNode(difference, property, ChangeMode.Same, outputMode);
+                        if (targetNode.Property != null)
+                        {
+                            difference[targetNode.Symbol][targetNode.Property] = showOriginalValues ? GetValue(second, property) : secondsItem;
+                        }
+                        else
+                            difference[targetNode.Symbol] = showOriginalValues ? GetValue(second, property) : secondsItem;
+                        NoteResult(property, secondsItem as JObject, difference.Last, ref diffelement);
+                    }
 
-                    continue;
+                        continue;
                 }
 
                 if (first?[property] is JArray)
