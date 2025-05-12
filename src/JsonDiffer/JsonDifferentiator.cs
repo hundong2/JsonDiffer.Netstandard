@@ -370,13 +370,13 @@ namespace JsonDiffer
                 var splited = variable.Split('~');
                 if (splited.Count() == 2)
                 {
-                    int firstValue = 0, secondValue = 0;
-                    var firstCheck = int.TryParse(splited[0], out firstValue);
-                    var secondCheck = int.TryParse(splited[1], out secondValue);
+                    double firstValue = 0, secondValue = 0;
+                    var firstCheck = double.TryParse(splited[0], out firstValue);
+                    var secondCheck = double.TryParse(splited[1], out secondValue);
                     if (firstCheck && secondCheck)
                     {
-                        int resultValue = 0;
-                        if (int.TryParse(originVariable, out resultValue))
+                        double resultValue = 0;
+                        if (double.TryParse(originVariable, out resultValue))
                         {
                             if (firstValue <= resultValue && resultValue <= secondValue)
                             {
@@ -394,11 +394,11 @@ namespace JsonDiffer
                     {
                         if (splited[0] == "")
                         {
-                            int diffVariable = 0;
-                            if (int.TryParse(splited[1], out diffVariable))
+                            double diffVariable = 0;
+                            if (double.TryParse(splited[1], out diffVariable))
                             {
-                                int resultValue = 0;
-                                if (int.TryParse(originVariable, out resultValue))
+                                double resultValue = 0;
+                                if (double.TryParse(originVariable, out resultValue))
                                 {
                                     if (resultValue <= diffVariable)
                                     {
@@ -410,11 +410,11 @@ namespace JsonDiffer
                         }
                         else if (splited[1] == "")
                         {
-                            int diffVariable = 0;
-                            if (int.TryParse(splited[0], out diffVariable))
+                            double diffVariable = 0;
+                            if (double.TryParse(splited[0], out diffVariable))
                             {
-                                int resultValue = 0;
-                                if (int.TryParse(originVariable, out resultValue))
+                                double resultValue = 0;
+                                if (double.TryParse(originVariable, out resultValue))
                                 {
                                     if (resultValue >= diffVariable)
                                     {
@@ -432,8 +432,8 @@ namespace JsonDiffer
                 var split = variable.Split(',');
                 if (split.Count() > 1)
                 {
-                    int countNumber = 0;
-                    if (int.TryParse(split[1], out countNumber))
+                    double countNumber = 0;
+                    if (double.TryParse(split[1], out countNumber))
                     {
                         if (originVariable != null && originVariable.Length == countNumber)
                         {
